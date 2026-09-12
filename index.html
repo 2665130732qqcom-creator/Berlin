@@ -243,9 +243,10 @@ if (window.scrollY > maxScroll - h) {
   // ============ 5 鍒?masonry ============
   const track = document.getElementById('track');
   const VW = () => window.innerWidth;
-  const isMobile = () => false;
+  const isMobile = () => VW() < 768;
   const colCenter = { 1:0.087, 2:0.293, 3:0.5, 4:0.707, 5:0.913 };
-  const COL_W = () => VW() * 0.122;
+  const mobileColCenter = { 1:0.293, 2:0.5, 3:0.707 };
+  const COL_W = () => isMobile() ? VW()*0.18 : VW() * 0.122;
   const ROW_H = () => COL_W() * 1.33;
   const GAP = () => VW() * 0.074;
   const isVideo = p => /\.(mp4|webm|mov)$/i.test(p);
@@ -297,7 +298,7 @@ if (window.scrollY > maxScroll - h) {
       const wide = meta.wide;
       let w = wide ? COL_W()*1.43 : COL_W();
       let h = w / meta.ratio;
-      const centerX = isMobile() ? VW()/2 : colCenter[col] * VW();
+      const centerX = (isMobile() ? mobileColCenter[col] : colCenter[col]) * VW();
       el.style.left = (centerX - w/2) + 'px';
       el.style.top = (top - h/2) + 'px';
       el.style.width = w + 'px';
@@ -315,10 +316,10 @@ if (window.scrollY > maxScroll - h) {
       return h;
     }
     window.colYState = isMobile()
-      ? { 1:ROW_H()*0.55 }
+      ? { 1:ROW_H()*1.5, 2:ROW_H()*0.55, 3:ROW_H()*1.5 }
       : { 1:ROW_H()*0.55, 2:ROW_H()*1.5, 3:ROW_H()*0.55, 4:ROW_H()*1.5, 5:ROW_H()*0.55 };
     const colY = window.colYState;
-    const cols = isMobile() ? [1] : [1,2,3,4,5];
+    const cols = isMobile() ? [1,2,3] : [1,2,3,4,5];
     while (photoIdx < PHOTOS.length) {
       for (const c of cols) {
         if (photoIdx >= PHOTOS.length) break;
@@ -551,14 +552,14 @@ items.forEach((it, i) => {
           canvas.getContext('2d').drawImage(img, 0, 0, w, h);
           const url = canvas.toDataURL('image/jpeg', 0.78);
           // 鍔犲埌鏈€鍚庝竴鍒楁湯灏
-const col = (items.length % 5) + 1;
+          const colN = isMobile() ? 3 : 5; const col = (items.length % colN) + 1;
           const top = colYState[col] || 0;
           const wide = w > h;
           const cw = wide ? COL_W()*1.43 : COL_W();
           const ch = cw * h / w;
           const el = document.createElement('div');
           el.className = 'shot';
-          el.style.left = (colCenter[col]*VW() - cw/2) + 'px';
+          const cc = isMobile() ? mobileColCenter[col] : colCenter[col]; el.style.left = (cc*VW() - cw/2) + 'px';
           el.style.top = (top - ch/2) + 'px';
           el.style.width = cw + 'px';
           el.style.height = ch + 'px';
