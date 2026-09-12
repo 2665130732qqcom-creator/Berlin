@@ -331,7 +331,7 @@ if (window.scrollY > maxScroll - h) {
       const wide = meta.wide;
       let w = wide ? COL_W()*1.43 : COL_W();
       let h = w / meta.ratio;
-      const centerX = isMobile() ? (col===2?COL_W()/2 : col===3?VW()/2 : VW()-COL_W()/2) : colCenter[col]*VW();
+      const centerX = isMobile() ? (col===2?COL_W()/2+1 : col===3?VW()/2 : VW()-COL_W()/2-1) : colCenter[col]*VW();
       el.style.left = (centerX - w/2) + 'px';
       el.style.top = (top - h/2) + 'px';
       el.style.width = w + 'px';
@@ -595,7 +595,7 @@ items.forEach((it, i) => {
           const ch = cw * h / w;
           const el = document.createElement('div');
           el.className = 'shot';
-          const cx = isMobile() ? (col===2?cw/2 : col===3?VW()/2 : VW()-cw/2) : colCenter[col]*VW(); el.style.left = (cx - cw/2) + 'px';
+          const cx = isMobile() ? (col===2?cw/2+1 : col===3?VW()/2 : VW()-cw/2-1) : colCenter[col]*VW(); el.style.left = (cx - cw/2) + 'px';
           el.style.top = (top - ch/2) + 'px';
           el.style.width = cw + 'px';
           el.style.height = ch + 'px';
