@@ -329,7 +329,7 @@ if (window.scrollY > maxScroll - h) {
       const el = document.createElement('div');
       el.className = 'shot';
       const wide = meta.wide;
-      let w = wide ? COL_W()*1.43 : COL_W();
+      let w = wide ? (isMobile() ? COL_W()*1.2 : COL_W()*1.43) : COL_W();
       let h = w / meta.ratio;
       const centerX = isMobile() ? (col===2?COL_W()/2+1 : col===3?VW()/2 : VW()-COL_W()/2-1) : colCenter[col]*VW();
       el.style.left = (centerX - w/2) + 'px';
