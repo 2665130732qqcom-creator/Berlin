@@ -126,7 +126,7 @@
 
   <div class="hero-title">BERLIN</div>
   <button class="plus">+</button>
-  <button id="shareBtn" style="position:fixed;top:20px;right:24px;z-index:300;width:40px;height:40px;border-radius:50%;background:#111;color:#fff;border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">鈫?/button>
+  <button id="shareBtn" style="position:fixed;top:20px;right:24px;z-index:300;width:40px;height:40px;border-radius:50%;background:#111;color:#fff;border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">&#8599;</button>
 
   <div class="hero-screen"></div>
   <div class="track" id="track"></div>
@@ -150,16 +150,16 @@
 
   <div class="pwd-mask" id="pwdMask"></div>
   <div class="pwd-box" id="pwdBox">
-    <div>杈撳叆缂栬緫瀵嗙爜</div>
-    <input type="password" id="pwdInput" placeholder="瀵嗙爜">
+    <div>Enter password</div>
+    <input type="password" id="pwdInput" placeholder="Password">
     <button id="pwdOk">纭畾</button>
   </div>
 
   <div class="edit-bar" id="editBar">
-    <button id="btnAdd">娣诲姞浣滃搧</button>
-    <button id="btnUndo">鎾ら攢</button>
-    <button id="btnSave">淇濆瓨</button>
-    <button id="btnExit">閫€鍑虹紪杈?/button>
+    <button id="btnAdd">Add Work</button>
+    <button id="btnUndo">Undo</button>
+    <button id="btnSave">Save</button>
+    <button id="btnExit">Exit Edit</button>
   </div>
   <input type="file" id="fileInput" accept="image/*" multiple style="display:none">
 
@@ -264,7 +264,7 @@ if (window.scrollY > maxScroll - h) {
 
   const items = [];
 
-  // comment`n  function loadMeta(src) {
+  function loadMeta(src) {
     return new Promise(resolve => {
       if (isVideo(src)) {
         const v = document.createElement('video');
@@ -331,7 +331,7 @@ const wide = meta.wide;
   function afterBuild() {
     track.style.visibility = 'visible';
 
-  // comment`n  const vidObserver = new IntersectionObserver(entries => {
+  const vidObserver = new IntersectionObserver(entries => {
     entries.forEach(en => {
       const v = en.target;
       if (en.isIntersecting && !v.src) {
@@ -414,7 +414,7 @@ items.forEach(it => {
   }
   stage.addEventListener('scroll', onScroll, { passive: true });
 
-  // comment`n  let wheelLock = false;
+  let wheelLock = false;
   stage.addEventListener('wheel', e => {
     if (wheelLock) { e.preventDefault(); return; }
     if (Math.abs(e.deltaY) < 5) return;
@@ -471,19 +471,19 @@ items.forEach((it, i) => {
   // 鍒嗕韩鎸夐挳
   document.getElementById('shareBtn').addEventListener('click', () => {
     const url = location.origin + location.pathname + '?shared=1';
-    navigator.clipboard.writeText(url).then(() => alert('鍒嗕韩閾炬帴宸插鍒讹細' + url));
+      navigator.clipboard.writeText(url).then(() => alert('Share link copied: ' + url));
   });
 
-  // comment`n  const shareBtn = document.getElementById('shareBtn');
+  const shareBtn = document.getElementById('shareBtn');
   window.addEventListener('scroll', () => {
     shareBtn.style.opacity = window.scrollY < window.innerHeight ? '1' : '0';
     shareBtn.style.pointerEvents = window.scrollY < window.innerHeight ? 'auto' : 'none';
   }, { passive: true });
 
-  // comment`n  if (!location.search.includes('shared=1')) {
+  if (!location.search.includes('shared=1')) {
     pwdBox.classList.add('show');
     document.getElementById('pwdMask').classList.add('show');
-    pwdBox.querySelector('div').textContent = '杈撳叆璁块棶瀵嗙爜';
+      pwdBox.querySelector('div').textContent = 'Enter access password';
     document.body.style.overflow = 'hidden';
   }
   let pwdMode = 'view'; // view | edit
@@ -491,7 +491,7 @@ items.forEach((it, i) => {
     if (e.key === '`') {
       pwdMode = 'edit';
       pwdBox.classList.add('show');
-      pwdBox.querySelector('div').textContent = '杈撳叆缂栬緫瀵嗙爜';
+      pwdBox.querySelector('div').textContent = 'Enter edit password';
       pwdInput.value=''; setTimeout(()=>pwdInput.focus(),100);
     }
   });
@@ -583,7 +583,7 @@ const col = (items.length % 5) + 1;
     const pos = {};
     items.forEach((it,i) => { pos[i] = { left: it.el.style.left, top: it.el.style.top }; });
     localStorage.setItem('layout', JSON.stringify(pos));
-    alert('宸蹭繚瀛?);
+    alert('Saved');
   });
   document.getElementById('btnUndo').addEventListener('click', () => {
     if (history.length) {
