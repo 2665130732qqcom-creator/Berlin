@@ -351,11 +351,32 @@ if (window.scrollY > maxScroll - h) {
     window.colYState = isMobile() ? { 2:ROW_H()*1.5, 3:ROW_H()*0.85, 4:ROW_H()*1.5 } : { 1:ROW_H()*0.55, 2:ROW_H()*1.5, 3:ROW_H()*0.55, 4:ROW_H()*1.5, 5:ROW_H()*0.55 };
     const colY = window.colYState;
     const cols = isMobile() ? [2,3,4] : [1,2,3,4,5];
-    while (photoIdx < PHOTOS.length) {
-      for (const c of cols) {
-        if (photoIdx >= PHOTOS.length) break;
-        const h = makeShot(c, colY[c]);
-        colY[c] += h + GAP();
+    if (isMobile()) {
+      const all5 = [1,2,3,4,5];
+      const buckets = {1:[],2:[],3:[],4:[],5:[]};
+      for (let i=0;i<PHOTOS.length;i++) buckets[all5[i%5]].push(i);
+      const rem = [buckets[2].slice(), buckets[3].slice(), buckets[4].slice()];
+      const flat = [];
+      let k = 0;
+      while (rem[0].length || rem[1].length || rem[2].length) {
+        const arr = rem[k%3];
+        if (arr.length) flat.push({ col: [2,3,4][k%3], idx: arr.shift() });
+        k++;
+      }
+      buckets[1].concat(buckets[5]).forEach((idx,j) => flat.push({ col: [2,3,4][j%3], idx }));
+      flat.forEach(({col, idx}) => {
+        photoIdx = idx;
+        const h = makeShot(col, colY[col]);
+        colY[col] += h + GAP();
+      });
+      photoIdx = PHOTOS.length;
+    } else {
+      while (photoIdx < PHOTOS.length) {
+        for (const c of cols) {
+          if (photoIdx >= PHOTOS.length) break;
+          const h = makeShot(c, colY[c]);
+          colY[c] += h + GAP();
+        }
       }
     }
     track.style.height = Math.max(...Object.values(colY)) + 'px';
