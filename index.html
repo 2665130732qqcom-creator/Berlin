@@ -21,9 +21,8 @@
     font-size: clamp(2.2rem, 7.5vw, 6.5rem);
     letter-spacing: -0.03em; white-space: nowrap;
     z-index: 1; pointer-events: none;
-    opacity: 0; transition: opacity 1.2s ease;
+    opacity: 0;
   }
-  body.loaded .hero-title { opacity: 1; }
 
   .plus {
     position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
@@ -282,7 +281,7 @@ if (window.scrollY > maxScroll - h) {
   const mobileColCenter = { 1:0.293, 2:0.5, 3:0.707 };
   const COL_W = () => isMobile() ? VW()*0.22 : VW() * 0.122;
   const ROW_H = () => COL_W() * 1.33;
-  const GAP = () => isMobile() ? DESIGN_W*0.074 : VW()*0.074;
+  const GAP = () => VW() * 0.074;
   const isVideo = p => /\.(mp4|webm|mov)$/i.test(p);
   const PHOTOS = ["works/w0.jpg","works/w1.jpg","works/w2.jpg","works/w3.jpg","works/w4.jpg","works/w5.jpg","works/w6.jpg","works/w7.jpg","works/w8.jpg","works/w9.jpg","works/w10.jpg","works/w11.jpg","works/w12.jpg","works/w13.jpg","works/w14.jpg","works/w15.jpg","works/w16.jpg","works/w17.jpg","works/w18.jpg","works/w19.jpg","works/w20.jpg","works/w21.jpg","works/w22.jpg","works/w23.jpg","works/w24.jpg","works/w25.jpg","works/w26.jpg","works/w27.jpg","works/w28.jpg","works/w29.jpg","works/w30.jpg","works/w31.jpg","works/w32.jpg","works/w33.jpg","works/w34.jpg","works/w35.jpg","works/w36.jpg","works/w37.jpg","works/w38.jpg","works/w39.jpg","works/w40.jpg","works/w41.jpg","works/w42.jpg","works/w43.jpg","works/w44.jpg","works/w45.jpg","works/w46.jpg","works/w47.jpg","works/w48.jpg","works/w49.jpg","works/w50.jpg","works/w51.jpg","works/w52.jpg","works/w53.jpg","works/w54.jpg","works/w55.png","works/w56.png","works/w57.png","works/w58.png","works/w59.png","works/w60.jpg","works/w61.png","works/w62.jpg","works/w63.jpg","works/w64.jpg","works/w65.png","works/w66.jpg","works/w67.jpg","works/w68.jpg","works/w69.jpg","works/w70.jpg","works/w71.jpg","works/w72.jpg","works/w73.jpg","works/w74.jpg","works/w75.jpg","works/w76.jpg","works/w77.jpg","works/w78.jpg","works/w79.jpg","works/w80.jpg","works/w81.jpg","works/w82.png","works/w83.png","works/w84.png","works/w85.png","works/w86.png","works/w87.png","works/w88.png","works/w89.png","works/w90.png","works/w91.png","works/w92.jpeg","works/w93.jpeg","works/w94.jpeg","works/w95.jpg","works/w96.jpg","works/w97.jpg","works/w98.jpg","works/w99.jpg","works/w100.jpg","works/w101.jpg","works/w102.jpg","works/w103.png","https://libailin.oss-cn-chengdu.aliyuncs.com/works/w104.mp4","https://libailin.oss-cn-chengdu.aliyuncs.com/works/w105.mp4","https://libailin.oss-cn-chengdu.aliyuncs.com/works/w106.mp4","https://libailin.oss-cn-chengdu.aliyuncs.com/works/w107.mp4","https://libailin.oss-cn-chengdu.aliyuncs.com/works/w108.mp4","https://libailin.oss-cn-chengdu.aliyuncs.com/works/w109.mp4","https://libailin.oss-cn-chengdu.aliyuncs.com/works/w110.mp4","https://libailin.oss-cn-chengdu.aliyuncs.com/works/w111.mp4","https://libailin.oss-cn-chengdu.aliyuncs.com/works/w112.mp4","https://libailin.oss-cn-chengdu.aliyuncs.com/works/w113.mp4","https://libailin.oss-cn-chengdu.aliyuncs.com/works/w114.mp4","https://libailin.oss-cn-chengdu.aliyuncs.com/works/w115.mp4","https://libailin.oss-cn-chengdu.aliyuncs.com/works/w116.mp4"];
   // 瑙嗛鍧囧寑鍒嗘暎鍒板浘鐗囦腑
@@ -346,7 +345,7 @@ if (window.scrollY > maxScroll - h) {
         img.onload = () => el.classList.add('loaded');
       }
       track.appendChild(el);
-      items.push({ el, src, isVideo: isVideo(src) });
+      items.push({ el, src, isVideo: isVideo(src), _meta: meta });
       return h;
     }
     window.colYState = isMobile() ? { 2:ROW_H()*1.5, 3:ROW_H()*0.55, 4:ROW_H()*1.5 } : { 1:ROW_H()*0.55, 2:ROW_H()*1.5, 3:ROW_H()*0.55, 4:ROW_H()*1.5, 5:ROW_H()*0.55 };
@@ -372,6 +371,11 @@ if (window.scrollY > maxScroll - h) {
     const metas = await Promise.all(PHOTOS.map(loadMeta));
     layoutShots(metas);
     afterBuild();
+    let _rsT;
+    window.addEventListener('resize', () => {
+      clearTimeout(_rsT);
+      _rsT = setTimeout(() => { const ms = PHOTOS.map((p,i) => items[i] && items[i]._meta ? items[i]._meta : {wide:false, ratio:0.75}); layoutShots(ms); afterBuild(); }, 250);
+    });
   }
 
   function afterBuild() {
