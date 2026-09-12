@@ -60,16 +60,23 @@
   .thumb img, .thumb video { width: 100%; height: 100%; object-fit: cover; display: block; }
   .stage {
     position: absolute; left: 0; right: 0; top: 0; bottom: 0;
-    overflow-y: auto; overflow-x: hidden;
+    overflow-y: auto; overflow-x: hidden; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch;
   }
   .slide {
-    height: 100vh; display: flex; align-items: center; justify-content: center;
+    height: 100vh; display: flex; align-items: center; justify-content: center; scroll-snap-align: start; scroll-snap-stop: always;
   }
   .slide img, .slide video {
     max-width: 80%; max-height: 82vh; object-fit: contain;
   }
   .back-btn { position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);
     font-weight: 800; font-size: 18px; background: none; border: none; color: #111; cursor: pointer; z-index: 5; }
+  @media (max-width: 768px) {
+    .rail { width: 76px; padding: 14px 0; }
+    .thumb { width: 52px; margin: 0 0 12px 12px; }
+    .stage { left: 76px; right: 0; }
+    .slide img, .slide video { max-width: 92%; max-height: 78vh; }
+    .back-btn { left: calc(76px + (100vw - 76px)/2); font-size: 16px; bottom: 16px; }
+  }
 
   /* 鍔犲彿鑿滃崟 overlay */
   .menu-overlay {
