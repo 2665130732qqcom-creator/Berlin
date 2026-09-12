@@ -176,21 +176,21 @@
     plusBtn.classList.toggle('rotate', open);
   });
 
-  // 棣栧睆澶у瓧鍏ュ満锛氬脊鎬у脊鍏?  if (location.search.includes('shared=1')) {
+  if (location.search.includes('shared=1')) {
     const ht = document.querySelector('.hero-title');
     gsap.fromTo(ht, { opacity: 0, scale: 0.8, y: 20 }, {
       opacity: 1, scale: 1, y: 0,
       duration: 1.2, ease: 'elastic.out(1, 0.6)',
     });
   }
-  // 鍒锋柊鑷姩鍥炰富椤?  window.scrollTo(0, 0);
+  window.scrollTo(0, 0);
 
   document.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add('loaded');
     window.scrollTo(0, 0);
   });
 
-  // 棣栧睆 鈫?鍥剧墖娴?/ 鍥剧墖娴?鈫?缁撳熬椤碉細婊氳疆涓€娆″钩婊戣繃娓?  const heroTitle = document.querySelector('.hero-title');
+  const heroTitle = document.querySelector('.hero-title');
   window.addEventListener('wheel', e => {
     const h = window.innerHeight;
     const maxScroll = document.body.scrollHeight - h;
@@ -211,7 +211,8 @@
     }
 
     // 鍚戜笅
-    // 棣栧睆 鈫?鍥剧墖娴?    if (window.scrollY < h*0.5) {
+    // 棣栧睆 鈫?鍥剧墖娴
+if (window.scrollY < h*0.5) {
       e.preventDefault();
       window.scrollTo({ top: h, behavior: 'smooth' });
       return;
@@ -229,7 +230,8 @@
     const maxScroll = document.body.scrollHeight - h;
     const p = Math.min(1, window.scrollY / h);
     let s = 1 - 0.15*p;
-    // 缁撳熬椤垫仮澶?    if (window.scrollY > maxScroll - h) {
+    // 缁撳熬椤垫仮澶
+if (window.scrollY > maxScroll - h) {
       const q = (window.scrollY - (maxScroll - h)) / h;
       s = 1 - 0.15*(1-q);
     }
@@ -262,7 +264,7 @@
 
   const items = [];
 
-  // 棰勫姞杞芥墍鏈夌礌鏉愶紝鑾峰彇鐪熷疄瀹介珮姣?  function loadMeta(src) {
+  // comment`n  function loadMeta(src) {
     return new Promise(resolve => {
       if (isVideo(src)) {
         const v = document.createElement('video');
@@ -289,7 +291,8 @@
       const meta = metas[photoIdx];
       const el = document.createElement('div');
       el.className = 'shot';
-      // 鍥剧墖浠ュ浐瀹氬搴︾缉鏀撅紝楂樺害鎸夌湡瀹炴瘮渚?      const wide = meta.wide;
+      // 鍥剧墖浠ュ浐瀹氬搴︾缉鏀撅紝楂樺害鎸夌湡瀹炴瘮渚
+const wide = meta.wide;
       let w = wide ? COL_W()*1.43 : COL_W();
       let h = w / meta.ratio;
       // 閿氱偣 = 鍥剧墖涓績鐐癸紝瀵归綈鍒?top
@@ -328,7 +331,7 @@
   function afterBuild() {
     track.style.visibility = 'visible';
 
-  // 瑙嗛锛氳繘鍏ヨ鍙ｅ姞杞藉苟鏄剧ず棣栧抚锛宧over 鎵嶆挱鏀?  const vidObserver = new IntersectionObserver(entries => {
+  // comment`n  const vidObserver = new IntersectionObserver(entries => {
     entries.forEach(en => {
       const v = en.target;
       if (en.isIntersecting && !v.src) {
@@ -345,7 +348,8 @@
     it.el.addEventListener('mouseleave', () => { v.pause(); v.currentTime = 0; });
   });
 
-  // 鍥剧墖 hover 寰斁澶?  items.forEach(it => {
+  // 鍥剧墖 hover 寰斁澶
+items.forEach(it => {
     it.el.addEventListener('mouseenter', () => {
       gsap.to(it.el, { scale: 1.02, duration: 0.3, ease: 'power2.out' });
     });
@@ -410,7 +414,7 @@
   }
   stage.addEventListener('scroll', onScroll, { passive: true });
 
-  // wheel 鎵嬪姩鍒囨崲锛岄伩鍏嶆柟鍚戝弽杞┖婊?  let wheelLock = false;
+  // comment`n  let wheelLock = false;
   stage.addEventListener('wheel', e => {
     if (wheelLock) { e.preventDefault(); return; }
     if (Math.abs(e.deltaY) < 5) return;
@@ -421,7 +425,8 @@
     setTimeout(() => wheelLock = false, 450);
   }, { passive: false });
 
-  // 鐐瑰浘鎵撳紑锛氭粴鍒板搴?slide锛堢紪杈戞ā寮忎笅绂佺敤锛?  items.forEach((it, i) => {
+  // 鐐瑰浘鎵撳紑锛氭粴鍒板搴?slide锛堢紪杈戞ā寮忎笅绂佺敤锛
+items.forEach((it, i) => {
     it.el.addEventListener('click', (e) => {
       if (editMode) { e.preventDefault(); e.stopPropagation(); return; }
       viewer.classList.add('open');
@@ -469,13 +474,13 @@
     navigator.clipboard.writeText(url).then(() => alert('鍒嗕韩閾炬帴宸插鍒讹細' + url));
   });
 
-  // 鍒嗕韩鎸夐挳锛氬彧鍦ㄤ富椤垫樉绀?  const shareBtn = document.getElementById('shareBtn');
+  // comment`n  const shareBtn = document.getElementById('shareBtn');
   window.addEventListener('scroll', () => {
     shareBtn.style.opacity = window.scrollY < window.innerHeight ? '1' : '0';
     shareBtn.style.pointerEvents = window.scrollY < window.innerHeight ? 'auto' : 'none';
   }, { passive: true });
 
-  // 闈炲垎浜摼鎺ヨ闂?鈫?瀵嗙爜闂?  if (!location.search.includes('shared=1')) {
+  // comment`n  if (!location.search.includes('shared=1')) {
     pwdBox.classList.add('show');
     document.getElementById('pwdMask').classList.add('show');
     pwdBox.querySelector('div').textContent = '杈撳叆璁块棶瀵嗙爜';
@@ -532,7 +537,8 @@
           canvas.width = w; canvas.height = h;
           canvas.getContext('2d').drawImage(img, 0, 0, w, h);
           const url = canvas.toDataURL('image/jpeg', 0.78);
-          // 鍔犲埌鏈€鍚庝竴鍒楁湯灏?          const col = (items.length % 5) + 1;
+          // 鍔犲埌鏈€鍚庝竴鍒楁湯灏
+const col = (items.length % 5) + 1;
           const top = colYState[col] || 0;
           const wide = w > h;
           const cw = wide ? COL_W()*1.43 : COL_W();
@@ -603,7 +609,8 @@
     if (!drag) return;
     let x = e.clientX - drag.dx;
     let y = e.clientY - drag.dy;
-    // 鍚搁檮锛氫笌鍏朵粬浣滃搧鐨勮竟鍜屼腑蹇冨榻?    const el = drag.el;
+    // 鍚搁檮锛氫笌鍏朵粬浣滃搧鐨勮竟鍜屼腑蹇冨榻
+const el = drag.el;
     const ew = el.offsetWidth, eh = el.offsetHeight;
     const myLeft = x, myRight = x+ew, myCX = x+ew/2, myTop = y, myBottom = y+eh, myCY = y+eh/2;
     let bestX = x, bestY = y, bestDX = 1e9, bestDY = 1e9;
