@@ -1,0 +1,652 @@
+﻿<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parallax Portfolio Demo</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    background: #F5F3F0; color: #111;
+    font-family: "Helvetica Neue", Helvetica, Arial, "PingFang SC", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* 澶у瓧 = 鍦版澘锛屽湪鍥剧墖搴曞眰 */
+  .hero-title {
+    position: fixed; left: 50%; top: 50%;
+    transform: translate(-50%,-50%);
+    font-weight: 900; text-transform: uppercase;
+    font-size: clamp(2.2rem, 7.5vw, 6.5rem);
+    letter-spacing: -0.03em; white-space: nowrap;
+    z-index: 1; pointer-events: none;
+    opacity: 0; transition: opacity 1.2s ease;
+  }
+  body.loaded .hero-title { opacity: 1; }
+
+  .plus {
+    position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
+    width: 36px; height: 36px; display:flex; align-items:center; justify-content:center;
+    font-size: 40px; font-weight: 400; line-height: 1;
+    background: none; border: none; color: #111;
+    cursor: pointer; z-index: 300;
+    transition: transform .55s cubic-bezier(.4,1.5,.5,1);
+  }
+  .plus:hover { transform: translateX(-50%) rotate(90deg); }
+
+  .hero-screen { height: 100vh; }
+  .track { position: relative; z-index: 2; }
+
+  .shot {
+    position: absolute; overflow: hidden;
+    cursor: zoom-in;
+    will-change: transform;
+    background: transparent;
+  }
+  .shot img, .shot video { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+  .viewer { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 250; background: #F5F3F0; display: none; overflow: hidden; transform: none !important; }
+  .viewer.open { display: block; }
+  .rail { position: absolute; left: 0; top: 0; bottom: 0; width: 120px; overflow: hidden; padding: 20px 0; }
+  .rail-inner { position: absolute; left: 0; top: 0; width: 100%; will-change: transform; }
+  .thumb {
+    width: 78px; margin: 0 0 19px 0;
+    overflow: hidden; cursor: pointer; opacity: .4; transition: opacity .2s;
+    position: relative; left: 0;
+  }
+  .thumb.active { opacity: 1; }
+  .thumb img, .thumb video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .stage {
+    position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+    overflow-y: auto; overflow-x: hidden;
+  }
+  .slide {
+    height: 100vh; display: flex; align-items: center; justify-content: center;
+  }
+  .slide img, .slide video {
+    max-width: 80%; max-height: 82vh; object-fit: contain;
+  }
+  .back-btn { position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);
+    font-weight: 800; font-size: 18px; background: none; border: none; color: #111; cursor: pointer; z-index: 5; }
+
+  /* 鍔犲彿鑿滃崟 overlay */
+  .menu-overlay {
+    position: fixed; inset: 0; background: #F5F3F0;
+    z-index: 200; opacity: 0; pointer-events: none;
+    transition: opacity .35s ease;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .menu-overlay.open { opacity: 1; pointer-events: auto; }
+  .menu-overlay .social-row {
+    position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 36px; align-items: center;
+  }
+  .menu-overlay .social-row a {
+    width: 37px; height: 37px; border-radius: 14px;
+    background: #fff; display: flex; align-items: center; justify-content: center;
+    overflow: hidden; text-decoration: none;
+    box-shadow: 0 4px 16px rgba(0,0,0,.08);
+    transition: transform .25s;
+  }
+  .menu-overlay .social-row a img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+  .menu-overlay .social-row a:hover { transform: translateY(-4px); }
+  .plus.rotate { transform: translateX(-50%) rotateX(180deg) rotate(135deg); }
+
+  /* 瀵嗙爜妗?*/
+  .pwd-box {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    background: #fff; padding: 24px 28px; border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.2); z-index: 999;
+    display: none; flex-direction: column; gap: 12px;
+  }
+  .pwd-box.show { display: flex; }
+  .pwd-mask { position: fixed; inset: 0; background: rgba(245,243,240,.95); z-index: 998; display: none; }
+  .pwd-mask.show { display: block; }
+  .pwd-box input { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+  .pwd-box button { padding: 8px; background: #111; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+  .shot.dragging { cursor: grabbing; z-index: 999; }
+
+  /* 缂栬緫宸ュ叿鏍?*/
+  .edit-bar {
+    position: fixed; top: 60px; left: 12px; z-index: 400;
+    display: none; flex-direction: column; gap: 6px;
+  }
+  .edit-bar.show { display: flex; }
+  .edit-bar button {
+    padding: 6px 12px; background: #111; color: #fff; border: none;
+    border-radius: 6px; cursor: pointer; font-size: 12px;
+  }
+  .edit-bar button:hover { background: #333; }
+</style>
+</head>
+<body>
+
+  <div class="hero-title">BERLIN</div>
+  <button class="plus">+</button>
+  <button id="shareBtn" style="position:fixed;top:20px;right:24px;z-index:300;width:40px;height:40px;border-radius:50%;background:#111;color:#fff;border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">鈫?/button>
+
+  <div class="hero-screen"></div>
+  <div class="track" id="track"></div>
+  <div class="hero-screen"></div>
+
+  <div class="viewer" id="viewer">
+    <div class="rail"><div class="rail-inner" id="railInner"></div></div>
+    <div class="stage" id="stage"></div>
+    <button class="back-btn" id="backBtn">杩斿洖</button>
+  </div>
+
+  <div class="menu-overlay" id="menuOverlay">
+    <div class="social-row">
+      <a href="#" title="QQ"><img src="icon1.webp" alt="QQ"></a>
+      <a href="#" title="寰俊"><img src="icon2.jpg" alt="寰俊"></a>
+      <a href="#" title="鎶栭煶"><img src="icon3.jpg" alt="鎶栭煶"></a>
+      <a href="#" title="灏忕孩涔?><img src="icon4.jpg" alt="灏忕孩涔?></a>
+      <a href="#" title="QQ閭"><img src="icon5.jpg" alt="QQ閭"></a>
+    </div>
+  </div>
+
+  <div class="pwd-mask" id="pwdMask"></div>
+  <div class="pwd-box" id="pwdBox">
+    <div>杈撳叆缂栬緫瀵嗙爜</div>
+    <input type="password" id="pwdInput" placeholder="瀵嗙爜">
+    <button id="pwdOk">纭畾</button>
+  </div>
+
+  <div class="edit-bar" id="editBar">
+    <button id="btnAdd">娣诲姞浣滃搧</button>
+    <button id="btnUndo">鎾ら攢</button>
+    <button id="btnSave">淇濆瓨</button>
+    <button id="btnExit">閫€鍑虹紪杈?/button>
+  </div>
+  <input type="file" id="fileInput" accept="image/*" multiple style="display:none">
+
+<script src="gsap.min.js"></script>
+<script src="ScrollTrigger.min.js"></script>
+<script>
+  gsap.registerPlugin(ScrollTrigger);
+
+  // 鍔犲彿鑿滃崟
+  const plusBtn = document.querySelector('.plus');
+  const menuOverlay = document.getElementById('menuOverlay');
+  plusBtn.addEventListener('click', () => {
+    const open = menuOverlay.classList.toggle('open');
+    plusBtn.classList.toggle('rotate', open);
+  });
+
+  // 棣栧睆澶у瓧鍏ュ満锛氬脊鎬у脊鍏?  if (location.search.includes('shared=1')) {
+    const ht = document.querySelector('.hero-title');
+    gsap.fromTo(ht, { opacity: 0, scale: 0.8, y: 20 }, {
+      opacity: 1, scale: 1, y: 0,
+      duration: 1.2, ease: 'elastic.out(1, 0.6)',
+    });
+  }
+  // 鍒锋柊鑷姩鍥炰富椤?  window.scrollTo(0, 0);
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.body.classList.add('loaded');
+    window.scrollTo(0, 0);
+  });
+
+  // 棣栧睆 鈫?鍥剧墖娴?/ 鍥剧墖娴?鈫?缁撳熬椤碉細婊氳疆涓€娆″钩婊戣繃娓?  const heroTitle = document.querySelector('.hero-title');
+  window.addEventListener('wheel', e => {
+    const h = window.innerHeight;
+    const maxScroll = document.body.scrollHeight - h;
+
+    // 鍚戜笂
+    if (e.deltaY < 0) {
+      // 鍦ㄧ粨灏鹃〉 鈫?涓€娆℃粴鍥炲浘鐗囨祦鏈熬
+      if (window.scrollY > maxScroll - h/2) {
+        e.preventDefault();
+        window.scrollTo({ top: maxScroll - h, behavior: 'smooth' });
+      }
+      // 棣栧睆闄勮繎 鈫?鍥為《
+      else if (window.scrollY < h*1.5) {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      return;
+    }
+
+    // 鍚戜笅
+    // 棣栧睆 鈫?鍥剧墖娴?    if (window.scrollY < h*0.5) {
+      e.preventDefault();
+      window.scrollTo({ top: h, behavior: 'smooth' });
+      return;
+    }
+    // 鎺ヨ繎缁撳熬椤?鈫?鐩存帴鍒板簳
+    if (window.scrollY >= maxScroll - h - 80) {
+      e.preventDefault();
+      window.scrollTo({ top: maxScroll, behavior: 'smooth' });
+    }
+  }, { passive: false });
+
+  // 澶у瓧锛氶灞忓埌鍥剧墖娴佺缉灏?5%锛屽埌缁撳熬椤垫仮澶?00%
+  window.addEventListener('scroll', () => {
+    const h = window.innerHeight;
+    const maxScroll = document.body.scrollHeight - h;
+    const p = Math.min(1, window.scrollY / h);
+    let s = 1 - 0.15*p;
+    // 缁撳熬椤垫仮澶?    if (window.scrollY > maxScroll - h) {
+      const q = (window.scrollY - (maxScroll - h)) / h;
+      s = 1 - 0.15*(1-q);
+    }
+    heroTitle.style.opacity = '1';
+    heroTitle.style.transform = `translate(-50%,-50%) scale(${s})`;
+  }, { passive: true });
+
+  // ============ 5 鍒?masonry ============
+  const track = document.getElementById('track');
+  const VW = () => window.innerWidth;
+  const isMobile = () => VW() < 768;
+  const colCenter = { 1:0.087, 2:0.293, 3:0.5, 4:0.707, 5:0.913 };
+  const COL_W = () => VW() * 0.122;
+  const ROW_H = () => COL_W() * 1.33;
+  const GAP = 142;
+  const isVideo = p => /\.(mp4|webm|mov)$/i.test(p);
+  const PHOTOS = ["works/w0.jpg","works/w1.jpg","works/w2.jpg","works/w3.jpg","works/w4.jpg","works/w5.jpg","works/w6.jpg","works/w7.jpg","works/w8.jpg","works/w9.jpg","works/w10.jpg","works/w11.jpg","works/w12.jpg","works/w13.jpg","works/w14.jpg","works/w15.jpg","works/w16.jpg","works/w17.jpg","works/w18.jpg","works/w19.jpg","works/w20.jpg","works/w21.jpg","works/w22.jpg","works/w23.jpg","works/w24.jpg","works/w25.jpg","works/w26.jpg","works/w27.jpg","works/w28.jpg","works/w29.jpg","works/w30.jpg","works/w31.jpg","works/w32.jpg","works/w33.jpg","works/w34.jpg","works/w35.jpg","works/w36.jpg","works/w37.jpg","works/w38.jpg","works/w39.jpg","works/w40.jpg","works/w41.jpg","works/w42.jpg","works/w43.jpg","works/w44.jpg","works/w45.jpg","works/w46.jpg","works/w47.jpg","works/w48.jpg","works/w49.jpg","works/w50.jpg","works/w51.jpg","works/w52.jpg","works/w53.jpg","works/w54.jpg","works/w55.png","works/w56.png","works/w57.png","works/w58.png","works/w59.png","works/w60.jpg","works/w61.png","works/w62.jpg","works/w63.jpg","works/w64.jpg","works/w65.png","works/w66.jpg","works/w67.jpg","works/w68.jpg","works/w69.jpg","works/w70.jpg","works/w71.jpg","works/w72.jpg","works/w73.jpg","works/w74.jpg","works/w75.jpg","works/w76.jpg","works/w77.jpg","works/w78.jpg","works/w79.jpg","works/w80.jpg","works/w81.jpg","works/w82.png","works/w83.png","works/w84.png","works/w85.png","works/w86.png","works/w87.png","works/w88.png","works/w89.png","works/w90.png","works/w91.png","works/w92.jpeg","works/w93.jpeg","works/w94.jpeg","works/w95.jpg","works/w96.jpg","works/w97.jpg","works/w98.jpg","works/w99.jpg","works/w100.jpg","works/w101.jpg","works/w102.jpg","works/w103.png","https://libailin.oss-cn-chengdu.aliyuncs.com/works/w104.mp4","https://libailin.oss-cn-chengdu.aliyuncs.com/works/w105.mp4","https://libailin.oss-cn-chengdu.aliyuncs.com/works/w106.mp4","https://libailin.oss-cn-chengdu.aliyuncs.com/works/w107.mp4","https://libailin.oss-cn-chengdu.aliyuncs.com/works/w108.mp4","https://libailin.oss-cn-chengdu.aliyuncs.com/works/w109.mp4","https://libailin.oss-cn-chengdu.aliyuncs.com/works/w110.mp4","https://libailin.oss-cn-chengdu.aliyuncs.com/works/w111.mp4","https://libailin.oss-cn-chengdu.aliyuncs.com/works/w112.mp4","https://libailin.oss-cn-chengdu.aliyuncs.com/works/w113.mp4","https://libailin.oss-cn-chengdu.aliyuncs.com/works/w114.mp4","https://libailin.oss-cn-chengdu.aliyuncs.com/works/w115.mp4","https://libailin.oss-cn-chengdu.aliyuncs.com/works/w116.mp4"];
+  // 瑙嗛鍧囧寑鍒嗘暎鍒板浘鐗囦腑
+  const imgs = PHOTOS.filter(p => !isVideo(p));
+  const vids = PHOTOS.filter(p => isVideo(p));
+  const mixed = [];
+  const step = Math.max(1, Math.floor(imgs.length / (vids.length + 1)));
+  let vi = 0;
+  for (let i = 0; i < imgs.length; i++) {
+    mixed.push(imgs[i]);
+    if (vi < vids.length && (i+1) % step === 0) { mixed.push(vids[vi++]); }
+  }
+  while (vi < vids.length) mixed.push(vids[vi++]);
+  PHOTOS.length = 0; PHOTOS.push(...mixed);
+
+  const items = [];
+
+  // 棰勫姞杞芥墍鏈夌礌鏉愶紝鑾峰彇鐪熷疄瀹介珮姣?  function loadMeta(src) {
+    return new Promise(resolve => {
+      if (isVideo(src)) {
+        const v = document.createElement('video');
+        v.preload = 'metadata';
+        v.onloadedmetadata = () => {
+          const wide = v.videoWidth > v.videoHeight;
+          resolve({ wide, ratio: v.videoWidth / v.videoHeight });
+        };
+        v.onerror = () => resolve({ wide: false, ratio: 0.75 });
+        v.src = src;
+        return;
+      }
+      const img = new Image();
+      img.onload = () => resolve({ wide: img.naturalWidth > img.naturalHeight, ratio: img.naturalWidth / img.naturalHeight });
+      img.onerror = () => resolve({ wide: false, ratio: 0.75 });
+      img.src = src;
+    });
+  }
+
+  async function build() {
+    const metas = await Promise.all(PHOTOS.map(loadMeta));
+    let photoIdx = 0;
+    function makeShot(col, top) {
+      const meta = metas[photoIdx];
+      const el = document.createElement('div');
+      el.className = 'shot';
+      // 鍥剧墖浠ュ浐瀹氬搴︾缉鏀撅紝楂樺害鎸夌湡瀹炴瘮渚?      const wide = meta.wide;
+      let w = wide ? COL_W()*1.43 : COL_W();
+      let h = w / meta.ratio;
+      // 閿氱偣 = 鍥剧墖涓績鐐癸紝瀵归綈鍒?top
+      const centerX = isMobile() ? VW()/2 : colCenter[col] * VW();
+      el.style.left = (centerX - w/2) + 'px';
+      el.style.top = (top - h/2) + 'px';
+      el.style.width = w + 'px';
+      el.style.height = h + 'px';
+      const src = PHOTOS[photoIdx++];
+      if (isVideo(src)) {
+        el.innerHTML = `<video data-src="${src}" muted loop playsinline preload="metadata"></video>`;
+      } else {
+        el.innerHTML = `<img src="${src}" alt="" loading="lazy">`;
+      }
+      track.appendChild(el);
+      items.push({ el, src, isVideo: isVideo(src) });
+      return h;
+    }
+
+    window.colYState = isMobile()
+      ? { 1:ROW_H()*0.55 }
+      : { 1:ROW_H()*0.55, 2:ROW_H()*1.5, 3:ROW_H()*0.55, 4:ROW_H()*1.5, 5:ROW_H()*0.55 };
+    const colY = window.colYState;
+    const cols = isMobile() ? [1] : [1,2,3,4,5];
+    while (photoIdx < PHOTOS.length) {
+      for (const c of cols) {
+        if (photoIdx >= PHOTOS.length) break;
+        const h = makeShot(c, colY[c]);
+        colY[c] += h + GAP;
+      }
+    }
+    track.style.height = Math.max(...Object.values(colY)) + 'px';
+    afterBuild();
+  }
+
+  function afterBuild() {
+    track.style.visibility = 'visible';
+
+  // 瑙嗛锛氳繘鍏ヨ鍙ｅ姞杞藉苟鏄剧ず棣栧抚锛宧over 鎵嶆挱鏀?  const vidObserver = new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      const v = en.target;
+      if (en.isIntersecting && !v.src) {
+        v.src = v.dataset.src;
+        v.addEventListener('loadeddata', () => { v.currentTime = 0; }, { once: true });
+      }
+    });
+  }, { rootMargin: '100px' });
+  items.forEach(it => {
+    if (!it.isVideo) return;
+    const v = it.el.querySelector('video');
+    vidObserver.observe(v);
+    it.el.addEventListener('mouseenter', () => v.play().catch(()=>{}));
+    it.el.addEventListener('mouseleave', () => { v.pause(); v.currentTime = 0; });
+  });
+
+  // 鍥剧墖 hover 寰斁澶?  items.forEach(it => {
+    it.el.addEventListener('mouseenter', () => {
+      gsap.to(it.el, { scale: 1.02, duration: 0.3, ease: 'power2.out' });
+    });
+    it.el.addEventListener('mouseleave', () => {
+      gsap.to(it.el, { scale: 1, duration: 0.3, ease: 'power2.out' });
+    });
+  });
+
+  // ============ 鏌ョ湅鍣?============
+  const viewer   = document.getElementById('viewer');
+  const stage = document.getElementById('stage');
+
+  // 寤哄乏鏍忕缉鐣ュ浘锛堟尝娴姬绾匡級+ 涓棿涓诲浘 slide
+  items.forEach((it, i) => {
+    const t = document.createElement('div');
+    t.className = 'thumb';
+    // 鎵€鏈夌缉鐣ュ浘涓績鐐瑰榻?rail 涓嚎
+    t.style.left = ((120 - 78) / 2) + 'px';
+    if (it.isVideo) {
+      t.innerHTML = `<video src="${it.src}" muted preload="metadata"></video>`;
+    } else {
+      t.innerHTML = `<img src="${it.src}" alt="">`;
+    }
+    t.addEventListener('click', () => {
+      stage.scrollTo({ top: i * stage.clientHeight, behavior: 'smooth' });
+    });
+    railInner.appendChild(t);
+
+    const s = document.createElement('div');
+    s.className = 'slide';
+    if (it.isVideo) {
+      s.innerHTML = `<video src="${it.src}" muted loop autoplay playsinline></video>`;
+    } else {
+      s.innerHTML = `<img src="${it.src}" alt="">`;
+    }
+    stage.appendChild(s);
+  });
+  const thumbs = [...railInner.children];
+  const slides = [...stage.children];
+  let activeIdx = 0;
+
+  // 宸︽爮 lerp 璺熼殢
+  let railCur = 0, railTarget = 0;
+  (function loop(){
+    railCur += (railTarget - railCur) * 0.12;
+    railInner.style.transform = `translateY(${-railCur}px)`;
+    requestAnimationFrame(loop);
+  })();
+
+  // 涓棿婊氬姩 鈫?鍚屾宸︽爮
+  function onScroll() {
+    const h = stage.clientHeight;
+    const idx = Math.round(stage.scrollTop / h);
+    activeIdx = Math.max(0, Math.min(items.length - 1, idx));
+    const railH = viewer.querySelector('.rail').clientHeight;
+    const t = thumbs[activeIdx];
+    railTarget = t.offsetTop + t.offsetHeight/2 - railH/2;
+    thumbs.forEach((th, i) => {
+      const on = i === activeIdx;
+      th.classList.toggle('active', on);
+    });
+  }
+  stage.addEventListener('scroll', onScroll, { passive: true });
+
+  // wheel 鎵嬪姩鍒囨崲锛岄伩鍏嶆柟鍚戝弽杞┖婊?  let wheelLock = false;
+  stage.addEventListener('wheel', e => {
+    if (wheelLock) { e.preventDefault(); return; }
+    if (Math.abs(e.deltaY) < 5) return;
+    wheelLock = true;
+    const dir = e.deltaY > 0 ? 1 : -1;
+    const target = (activeIdx + dir) * stage.clientHeight;
+    stage.scrollTo({ top: target, behavior: 'smooth' });
+    setTimeout(() => wheelLock = false, 450);
+  }, { passive: false });
+
+  // 鐐瑰浘鎵撳紑锛氭粴鍒板搴?slide锛堢紪杈戞ā寮忎笅绂佺敤锛?  items.forEach((it, i) => {
+    it.el.addEventListener('click', (e) => {
+      if (editMode) { e.preventDefault(); e.stopPropagation(); return; }
+      viewer.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      stage.scrollTop = i * stage.clientHeight;
+      onScroll();
+    });
+  });
+
+  // 閿洏
+  window.addEventListener('keydown', e => {
+    if (!viewer.classList.contains('open')) return;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+      stage.scrollTo({ top: (activeIdx+1)*stage.clientHeight, behavior:'smooth' });
+    }
+    if (e.key === 'ArrowUp'   || e.key === 'ArrowLeft') {
+      stage.scrollTo({ top: (activeIdx-1)*stage.clientHeight, behavior:'smooth' });
+    }
+    if (e.key === 'Escape') closeViewer();
+  });
+
+  function closeViewer() {
+    gsap.to(viewer, {
+      opacity: 0, duration: 0.3, ease: 'power2.in',
+      onComplete: () => {
+        viewer.classList.remove('open');
+        viewer.style.opacity = '';
+        document.body.style.overflow = '';
+      }
+    });
+  }
+  backBtn.addEventListener('click', closeViewer);
+  }
+
+  // 娉㈡氮閿?~)寮瑰瘑鐮佹
+  const pwdBox = document.getElementById('pwdBox');
+  const pwdInput = document.getElementById('pwdInput');
+  const editBar = document.getElementById('editBar');
+  let editMode = false;
+  const history = [];
+
+  // 鍒嗕韩鎸夐挳
+  document.getElementById('shareBtn').addEventListener('click', () => {
+    const url = location.origin + location.pathname + '?shared=1';
+    navigator.clipboard.writeText(url).then(() => alert('鍒嗕韩閾炬帴宸插鍒讹細' + url));
+  });
+
+  // 鍒嗕韩鎸夐挳锛氬彧鍦ㄤ富椤垫樉绀?  const shareBtn = document.getElementById('shareBtn');
+  window.addEventListener('scroll', () => {
+    shareBtn.style.opacity = window.scrollY < window.innerHeight ? '1' : '0';
+    shareBtn.style.pointerEvents = window.scrollY < window.innerHeight ? 'auto' : 'none';
+  }, { passive: true });
+
+  // 闈炲垎浜摼鎺ヨ闂?鈫?瀵嗙爜闂?  if (!location.search.includes('shared=1')) {
+    pwdBox.classList.add('show');
+    document.getElementById('pwdMask').classList.add('show');
+    pwdBox.querySelector('div').textContent = '杈撳叆璁块棶瀵嗙爜';
+    document.body.style.overflow = 'hidden';
+  }
+  let pwdMode = 'view'; // view | edit
+  window.addEventListener('keydown', e => {
+    if (e.key === '`') {
+      pwdMode = 'edit';
+      pwdBox.classList.add('show');
+      pwdBox.querySelector('div').textContent = '杈撳叆缂栬緫瀵嗙爜';
+      pwdInput.value=''; setTimeout(()=>pwdInput.focus(),100);
+    }
+  });
+  document.getElementById('pwdOk').addEventListener('click', () => {
+    if (pwdInput.value === '050820') {
+      pwdBox.classList.remove('show');
+      document.getElementById('pwdMask').classList.remove('show');
+      document.body.style.overflow = '';
+      if (pwdMode === 'edit') {
+        editMode = true;
+        editBar.classList.add('show');
+      } else {
+        window.scrollTo(0, 0);
+        const ht = document.querySelector('.hero-title');
+        gsap.set(ht, { opacity: 0, scale: 0.8, y: 20 });
+        gsap.to(ht, {
+          opacity: 1, scale: 1, y: 0,
+          duration: 1.2, ease: 'elastic.out(1, 0.6)',
+        });
+      }
+    } else { pwdInput.value=''; pwdInput.focus(); }
+  });
+  document.getElementById('btnExit').addEventListener('click', () => {
+    editMode = false;
+    editBar.classList.remove('show');
+  });
+
+  // 娣诲姞浣滃搧
+  const fileInput = document.getElementById('fileInput');
+  document.getElementById('btnAdd').addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', e => {
+    const files = [...e.target.files];
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const img = new Image();
+        img.onload = () => {
+          // 鍘嬬缉鍒?1600px
+          const maxW = 1600;
+          let w = img.naturalWidth, h = img.naturalHeight;
+          if (w > maxW) { h = h * maxW / w; w = maxW; }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          const url = canvas.toDataURL('image/jpeg', 0.78);
+          // 鍔犲埌鏈€鍚庝竴鍒楁湯灏?          const col = (items.length % 5) + 1;
+          const top = colYState[col] || 0;
+          const wide = w > h;
+          const cw = wide ? COL_W()*1.43 : COL_W();
+          const ch = cw * h / w;
+          const el = document.createElement('div');
+          el.className = 'shot';
+          el.style.left = (colCenter[col]*VW() - cw/2) + 'px';
+          el.style.top = (top - ch/2) + 'px';
+          el.style.width = cw + 'px';
+          el.style.height = ch + 'px';
+          el.innerHTML = `<img src="${url}" alt="" loading="lazy">`;
+          track.appendChild(el);
+          const it = { el, src: url, isVideo: false };
+          items.push(it);
+          colYState[col] = top + ch + GAP;
+          el.addEventListener('click', (ev) => {
+            if (editMode) { ev.preventDefault(); ev.stopPropagation(); return; }
+            viewer.classList.add('open');
+            document.body.style.overflow = 'hidden';
+            const s = document.createElement('div');
+            s.className = 'slide';
+            s.innerHTML = `<img src="${url}" alt="">`;
+            stage.appendChild(s);
+            const t = document.createElement('div');
+            t.className = 'thumb';
+            t.style.left = ((120 - 78) / 2) + 'px';
+            t.innerHTML = `<img src="${url}" alt="">`;
+            t.addEventListener('click', () => stage.scrollTo({ top: (items.length-1)*stage.clientHeight, behavior:'smooth' }));
+            railInner.appendChild(t);
+            stage.scrollTop = (items.length-1) * stage.clientHeight;
+            onScroll();
+          });
+          track.style.height = Math.max(...Object.values(colYState)) + 'px';
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+    fileInput.value = '';
+  });
+  document.getElementById('btnSave').addEventListener('click', () => {
+    const pos = {};
+    items.forEach((it,i) => { pos[i] = { left: it.el.style.left, top: it.el.style.top }; });
+    localStorage.setItem('layout', JSON.stringify(pos));
+    alert('宸蹭繚瀛?);
+  });
+  document.getElementById('btnUndo').addEventListener('click', () => {
+    if (history.length) {
+      const last = history.pop();
+      last.el.style.left = last.left;
+      last.el.style.top = last.top;
+    }
+  });
+
+  // 鎷栧姩浣滃搧 + 鍚搁檮
+  const SNAP = 8;
+  let drag = null;
+  document.addEventListener('mousedown', e => {
+    if (!editMode) return;
+    const shot = e.target.closest('.shot');
+    if (!shot) return;
+    e.preventDefault();
+    history.push({ el: shot, left: shot.style.left, top: shot.style.top });
+    drag = { el: shot, dx: e.clientX - shot.offsetLeft, dy: e.clientY - shot.offsetTop };
+    shot.classList.add('dragging');
+  });
+  document.addEventListener('mousemove', e => {
+    if (!drag) return;
+    let x = e.clientX - drag.dx;
+    let y = e.clientY - drag.dy;
+    // 鍚搁檮锛氫笌鍏朵粬浣滃搧鐨勮竟鍜屼腑蹇冨榻?    const el = drag.el;
+    const ew = el.offsetWidth, eh = el.offsetHeight;
+    const myLeft = x, myRight = x+ew, myCX = x+ew/2, myTop = y, myBottom = y+eh, myCY = y+eh/2;
+    let bestX = x, bestY = y, bestDX = 1e9, bestDY = 1e9;
+    items.forEach(it => {
+      if (it.el === el) return;
+      const r = it.el.getBoundingClientRect();
+      const ox = it.el.offsetLeft - e.clientX + (e.clientX - drag.dx);
+      const oy = it.el.offsetTop - e.clientY + (e.clientY - drag.dy);
+      const oL = it.el.offsetLeft, oR = oL + it.el.offsetWidth, oCX = oL + it.el.offsetWidth/2;
+      const oT = it.el.offsetTop, oB = oT + it.el.offsetHeight, oCY = oT + it.el.offsetHeight/2;
+      // 姘村钩鍚搁檮
+      [myLeft, myRight, myCX].forEach(my => {
+        [oL, oR, oCX].forEach(o => {
+          const d = Math.abs(my - o);
+          if (d < SNAP && d < bestDX) { bestDX = d; bestX = x + (o - my); }
+        });
+      });
+      // 鍨傜洿鍚搁檮
+      [myTop, myBottom, myCY].forEach(my => {
+        [oT, oB, oCY].forEach(o => {
+          const d = Math.abs(my - o);
+          if (d < SNAP && d < bestDY) { bestDY = d; bestY = y + (o - my); }
+        });
+      });
+    });
+    el.style.left = bestX + 'px';
+    el.style.top = bestY + 'px';
+  });
+  document.addEventListener('mouseup', () => {
+    if (drag) { drag.el.classList.remove('dragging'); drag = null; }
+  });
+
+  build();
+  // 鎭㈠淇濆瓨鐨勫竷灞€
+  setTimeout(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('layout') || '{}');
+      Object.keys(saved).forEach(k => {
+        if (items[k]) { items[k].el.style.left = saved[k].left; items[k].el.style.top = saved[k].top; }
+      });
+    } catch(e) {}
+  }, 500);
+</script>
+</body>
+</html>
+
