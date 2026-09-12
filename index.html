@@ -233,28 +233,28 @@ if (window.scrollY < h*0.5) {
   }, { passive: false });
 
   // 手机端 touch 跳动：主页下滑一次进图片流，结尾上滑一次回图片流
-  let _tsY = 0, _touching = false;
-  window.addEventListener('touchstart', e => { _tsY = e.touches[0].clientY; _touching = true; }, { passive: true });
-  window.addEventListener('touchmove', e => {
-    if (!isMobile || viewer.classList.contains('open') || !_touching) return;
+  let _tsY = 0, _touching = false, _jumped = false;
+  function _heroJump(dir){
     const h = window.innerHeight, maxScroll = document.body.scrollHeight - h;
-    if (window.scrollY < h || window.scrollY > maxScroll - h) e.preventDefault();
-  }, { passive: false });
-  window.addEventListener('touchend', e => {
-    _touching = false;
-    if (!isMobile || viewer.classList.contains('open')) return;
-    const h = window.innerHeight, maxScroll = document.body.scrollHeight - h;
-    const dy = _tsY - e.changedTouches[0].clientY;
     if (window.scrollY < h*0.6) {
-      if (dy > 40) window.scrollTo({ top: h, behavior: 'smooth' });
+      if (dir > 0) window.scrollTo({ top: h, behavior: 'smooth' });
       else window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    if (window.scrollY > maxScroll - h*0.6) {
-      if (dy < -40) window.scrollTo({ top: maxScroll - h, behavior: 'smooth' });
+    } else if (window.scrollY > maxScroll - h*0.6) {
+      if (dir < 0) window.scrollTo({ top: maxScroll - h, behavior: 'smooth' });
       else window.scrollTo({ top: maxScroll, behavior: 'smooth' });
     }
-  });
+  }
+  window.addEventListener('touchstart', e => { _tsY = e.touches[0].clientY; _touching = true; _jumped = false; }, { passive: true });
+  window.addEventListener('touchmove', e => {
+    if (!isMobile || viewer.classList.contains('open') || !_touching || _jumped) return;
+    const h = window.innerHeight, maxScroll = document.body.scrollHeight - h;
+    const inHero = window.scrollY < h, inEnd = window.scrollY > maxScroll - h;
+    if (!inHero && !inEnd) return;
+    e.preventDefault();
+    const dy = _tsY - e.touches[0].clientY;
+    if (Math.abs(dy) > 12) { _jumped = true; _heroJump(dy); }
+  }, { passive: false });
+  window.addEventListener('touchend', () => { _touching = false; });
 
   // 澶у瓧锛氶灞忓埌鍥剧墖娴佺缉灏?5%锛屽埌缁撳熬椤垫仮澶?00%
   let _raff = null;
@@ -281,9 +281,9 @@ if (window.scrollY > maxScroll - h) {
   const isMobile = () => VW() < 768;
   const colCenter = { 1:0.087, 2:0.293, 3:0.5, 4:0.707, 5:0.913 };
   const mobileColCenter = { 1:0.293, 2:0.5, 3:0.707 };
-  const DESIGN_W = 760;
+  const DESIGN_W = 580;
   const offX = () => isMobile() ? (VW() - DESIGN_W)/2 : 0;
-  const COL_W = () => isMobile() ? DESIGN_W*0.17 : VW() * 0.122;
+  const COL_W = () => isMobile() ? DESIGN_W*0.165 : VW() * 0.122;
   const ROW_H = () => COL_W() * 1.33;
   const GAP = () => isMobile() ? DESIGN_W*0.074 : VW()*0.074;
   const isVideo = p => /\.(mp4|webm|mov)$/i.test(p);
